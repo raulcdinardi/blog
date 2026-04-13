@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from datetime import date
 import os
+import re
 import secrets
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response, status
@@ -8,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import Boolean, ForeignKey, String, Text, create_engine, func, select
+from sqlalchemy import Boolean, ForeignKey, String, Text, create_engine, delete, func, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
 engine = create_engine("sqlite:///./blog_completo.db", connect_args={"check_same_thread": False})
@@ -67,6 +68,10 @@ def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
         )
 
 
+def summarize_html(text: str):
+    return " ".join(re.sub(r"<[^>]+>", " ", text).split())[:220]
+
+
 def seed():
     with engine.begin() as conn:
         cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(posts)").fetchall()}
@@ -81,44 +86,38 @@ def seed():
         category = Category(name="Artigos", description="Categoria interna")
         db.add(category)
         db.flush()
-    if db.scalar(select(Post.id).limit(1)) is not None:
-        db.close()
-        return
-
-    for i in range(1, 201):
+    db.execute(delete(Post).where(Post.title.like("post #%")))
+    titles = set(db.scalars(select(Post.title)).all())
+    if "Debate Proposal" not in titles:
         db.add(
             Post(
-                title=f"post #{i}",
-                excerpt=f"resumo do post #{i}",
-                content=f"conteudo do post #{i}",
+                title="Debate Proposal",
+                excerpt="Proposal document.",
+                content="""
+<p>This post contains the embedded PDF version of the document.</p>
+<p>You can read it below or open it in a separate tab.</p>
+""".strip(),
+                pdf_path="pdfs/debate_proposal.pdf",
                 published=True,
-                created_at="2026-04-09",
+                created_at="2026-04-10",
                 category_id=category.id,
             )
         )
-
-    db.add(
-        Post(
-            title="Debate Proposal",
-            excerpt="Documento PDF adicionado como post do blog.",
-            content="Voce pode visualizar o documento abaixo ou abrir em outra aba.",
-            pdf_path="pdfs/debate_proposal.pdf",
-            published=True,
-            created_at="2026-04-10",
-            category_id=category.id,
+    if "Apart AI Control 2026" not in titles:
+        db.add(
+            Post(
+                title="Apart AI Control 2026",
+                excerpt="Research document.",
+                content="""
+<p>This post contains the embedded PDF version of the document.</p>
+<p>You can read it below or open it in a separate tab.</p>
+""".strip(),
+                pdf_path="pdfs/apart_ai_control_2026.pdf",
+                published=True,
+                created_at="2026-04-10",
+                category_id=category.id,
+            )
         )
-    )
-    db.add(
-        Post(
-            title="Apart AI Control 2026",
-            excerpt="Documento PDF adicionado como post do blog.",
-            content="Voce pode visualizar o documento abaixo ou abrir em outra aba.",
-            pdf_path="pdfs/apart_ai_control_2026.pdf",
-            published=True,
-            created_at="2026-04-10",
-            category_id=category.id,
-        )
-    )
 
     db.commit()
     db.close()
@@ -174,19 +173,22 @@ def show_post(post_id: int, request: Request, db: Session = Depends(get_db)):
 def create_post(
     request: Request,
     title: str = Form(...),
-    excerpt: str = Form(...),
+    excerpt: str = Form(""),
     content: str = Form(...),
     pdf_path: str = Form(""),
     published: bool = Form(False),
     _: HTTPBasicCredentials = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    if not title.strip() or not excerpt.strip() or not content.strip():
+    title = title.strip()
+    content = content.strip()
+    excerpt = excerpt.strip() or summarize_html(content)
+    if not title or not content:
         posts = db.scalars(select(Post).order_by(Post.id.desc())).all()
         return templates.TemplateResponse(
             request=request,
             name="partials/post_form_result.html",
-            context={"message": "Preencha todos os campos.", "success": False, "posts": posts},
+            context={"message": "Preencha titulo e conteudo.", "success": False, "posts": posts},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     category = db.scalar(select(Category).where(Category.name == "Artigos"))
@@ -196,9 +198,9 @@ def create_post(
         db.flush()
     db.add(
         Post(
-            title=title.strip(),
-            excerpt=excerpt.strip(),
-            content=content.strip(),
+            title=title,
+            excerpt=excerpt,
+            content=content,
             pdf_path=pdf_path.strip() or None,
             published=published,
             created_at=date.today().isoformat(),
@@ -219,7 +221,7 @@ def update_post(
     post_id: int,
     request: Request,
     title: str = Form(...),
-    excerpt: str = Form(...),
+    excerpt: str = Form(""),
     content: str = Form(...),
     pdf_path: str = Form(""),
     published: bool = Form(False),
@@ -235,8 +237,8 @@ def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
         )
     post.title = title.strip()
-    post.excerpt = excerpt.strip()
     post.content = content.strip()
+    post.excerpt = excerpt.strip() or summarize_html(post.content)
     post.pdf_path = pdf_path.strip() or None
     post.published = published
     db.commit()

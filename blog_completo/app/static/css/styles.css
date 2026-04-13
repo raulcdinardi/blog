@@ -70,6 +70,10 @@ textarea {
     border: 1px solid #ddd;
 }
 
+.code-input {
+    font-family: "Courier New", monospace;
+}
+
 button {
     border: 1px solid #ddd;
     padding: 0.7rem 1rem;
@@ -94,6 +98,25 @@ button {
 
 .article {
     max-width: 760px;
+}
+
+.article-body {
+    display: grid;
+    gap: 1rem;
+}
+
+.article-body img,
+.article-body iframe,
+.article-body video,
+.article-body canvas,
+.article-body svg {
+    max-width: 100%;
+}
+
+.article-body pre {
+    overflow-x: auto;
+    padding: 1rem;
+    border: 1px solid #ddd;
 }
 
 .pdf {

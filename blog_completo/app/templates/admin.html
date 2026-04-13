@@ -7,8 +7,8 @@
     <h2>Novo post</h2>
     <form class="form" hx-post="/posts" hx-target="#post-feedback" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) this.reset()">
         <label>Titulo<input type="text" name="title" required></label>
-        <label>Resumo<input type="text" name="excerpt" required></label>
-        <label>Conteudo<textarea name="content" rows="8" required></textarea></label>
+        <label>Resumo<input type="text" name="excerpt"></label>
+        <label>Corpo HTML<textarea class="code-input" name="content" rows="16" required></textarea></label>
         <label>PDF<input type="text" name="pdf_path" placeholder="pdfs/arquivo.pdf"></label>
         <label class="check"><input type="checkbox" name="published">Publicado</label>
         <button type="submit">Salvar</button>
