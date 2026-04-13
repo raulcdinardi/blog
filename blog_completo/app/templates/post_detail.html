@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="article">
+    <h2>{{ post.title }}</h2>
+    <p class="lead">{{ post.excerpt }}</p>
+    <p>{{ post.content }}</p>
+    {% if post.pdf_path %}
+        <iframe class="pdf" src="{{ url_for('static', path=post.pdf_path) }}#view=FitH" title="{{ post.title }}"></iframe>
+        <p><a href="{{ url_for('static', path=post.pdf_path) }}" target="_blank" rel="noopener noreferrer">Abrir PDF</a></p>
+    {% endif %}
+</article>
+{% endblock %}

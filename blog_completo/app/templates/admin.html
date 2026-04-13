@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p><a href="/">Voltar</a></p>
+
+<section class="box">
+    <h2>Novo post</h2>
+    <form class="form" hx-post="/posts" hx-target="#post-feedback" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) this.reset()">
+        <label>Titulo<input type="text" name="title" required></label>
+        <label>Resumo<input type="text" name="excerpt" required></label>
+        <label>Conteudo<textarea name="content" rows="8" required></textarea></label>
+        <label>PDF<input type="text" name="pdf_path" placeholder="pdfs/arquivo.pdf"></label>
+        <label class="check"><input type="checkbox" name="published">Publicado</label>
+        <button type="submit">Salvar</button>
+    </form>
+    <div id="post-feedback"></div>
+</section>
+
+<section class="box">
+    <h2>Posts</h2>
+    <div id="admin-post-list" class="list">
+        {% for post in posts %}
+            {% include "partials/admin_post.html" %}
+        {% else %}
+            <p>Nenhum post.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

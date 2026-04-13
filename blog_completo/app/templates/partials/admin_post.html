@@ -1,0 +1,14 @@
+<article class="box" id="post-{{ post.id }}">
+    <div class="row">
+        <strong>{{ post.title }}</strong>
+        <button class="danger" hx-delete="/posts/{{ post.id }}" hx-target="#post-{{ post.id }}" hx-swap="outerHTML">Deletar</button>
+    </div>
+    <form class="form" hx-put="/posts/{{ post.id }}" hx-target="#post-{{ post.id }}" hx-swap="outerHTML">
+        <label>Titulo<input type="text" name="title" value="{{ post.title }}" required></label>
+        <label>Resumo<input type="text" name="excerpt" value="{{ post.excerpt }}" required></label>
+        <label>Conteudo<textarea name="content" rows="4" required>{{ post.content }}</textarea></label>
+        <label>PDF<input type="text" name="pdf_path" value="{{ post.pdf_path or '' }}"></label>
+        <label class="check"><input type="checkbox" name="published" {% if post.published %}checked{% endif %}>Publicado</label>
+        <button type="submit">Salvar</button>
+    </form>
+</article>

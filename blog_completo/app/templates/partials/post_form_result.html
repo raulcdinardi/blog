@@ -1,0 +1,8 @@
+{% include "partials/message.html" %}
+<div id="admin-post-list" hx-swap-oob="innerHTML">
+    {% for post in posts %}
+        {% include "partials/admin_post.html" %}
+    {% else %}
+        <p>Nenhum post.</p>
+    {% endfor %}
+</div>

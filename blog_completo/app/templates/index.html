@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="feed" class="list" hx-get="/posts?page=1" hx-trigger="load">
+    <div class="box">Carregando...</div>
+</section>
+{% endblock %}
